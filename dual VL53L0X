@@ -1,0 +1,87 @@
+/* This example shows how to get single-shot range
+ measurements from dual VL53L0X. 
+
+ The range readings are in units of mm. 
+ 
+ HvC
+ */
+ 
+ 
+
+#include <Wire.h>
+#include <VL53L0X.h>
+
+VL53L0X sensorFrontal,sensorDER,sensorIZQ;
+
+const int s1 = 2, s2 = 3;
+
+int distFrontal,distDER,distIZQ;
+
+void setup()
+{
+  Serial.begin(115200);
+  Wire.begin();
+
+  pinMode(s1,OUTPUT);
+  pinMode(s2,OUTPUT);
+  
+  VL53L0X_CONFIG();
+
+}
+
+void loop()
+{
+  READ_DIST();
+  Serial.print(distFrontal);
+  Serial.print(",");
+  Serial.print(distDER);
+  Serial.println();
+}
+
+void VL53L0X_CONFIG(){
+  //Rest All Sensors
+  digitalWrite(s1,LOW);
+  digitalWrite(s2,LOW);
+  delay(10);
+  digitalWrite(s1,HIGH);
+  digitalWrite(s2,HIGH);
+  delay(10);
+
+  //Select Sensor#1
+  digitalWrite(s1,HIGH);
+  digitalWrite(s2,LOW);
+  delay(10);
+  Serial.println(sensorFrontal.getAddress());
+  //Change I2C Address
+  sensorFrontal.setAddress(0x30);
+  Serial.println(sensorFrontal.getAddress());
+  //Initialize Sensor#1
+  sensorFrontal.init();
+  delay(10);
+  sensorFrontal.setTimeout(500);
+
+  //Select Sensor#2
+  digitalWrite(s1,HIGH);
+  digitalWrite(s2,HIGH);
+  delay(10);
+  Serial.println(sensorDER.getAddress());
+  //Change I2C Address
+  sensorDER.setAddress(0x36);
+  Serial.println(sensorDER.getAddress());
+  //Initialize Sensor#1
+  sensorDER.init();
+  delay(10);
+  sensorDER.setTimeout(500);
+
+  //SET TIMING BUDGET
+  sensorFrontal.setMeasurementTimingBudget(10000);
+  sensorDER.setMeasurementTimingBudget(10000);
+}
+
+void READ_DIST(){
+  distFrontal = sensorFrontal.readRangeSingleMillimeters();
+  if (sensorFrontal.timeoutOccurred()) { Serial.print(" TIMEOUT SF"); }
+
+  distDER = sensorDER.readRangeSingleMillimeters();
+  if (sensorDER.timeoutOccurred()) { Serial.print(" TIMEOUT SD"); }
+}
